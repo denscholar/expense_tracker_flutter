@@ -27,11 +27,71 @@ class _ExpensesState extends State<Expenses> {
   ];
 
   void _openAddExpenseOverlay() {
-    showModalBottomSheet(context: context, builder: (ctx) => NewExpense());
+    showModalBottomSheet(
+      isScrollControlled: true,
+      context: context,
+      builder: (ctx) => NewExpense(onAddExpense: _addExpense),
+    );
+  }
+
+  // ADD EXPENSE
+  void _addExpense(Expense expense) {
+    setState(() {
+      _registerdExpenses.add(expense);
+    });
+  }
+
+  // REMOVE EXPENSE
+  // remove expense
+  void _removeExpense(Expense expense) {
+    final expenseIndex = _registerdExpenses.indexOf(expense);
+
+    setState(() {
+      _registerdExpenses.remove(expense);
+    });
+    ScaffoldMessenger.of(context).clearSnackBars();
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Expense deleted'),
+        duration: const Duration(seconds: 3),
+        action: SnackBarAction(
+          label: 'Undo',
+          onPressed: () {
+            setState(() {
+              _registerdExpenses.insert(expenseIndex, expense);
+            });
+          },
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    Widget mainContent = Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.shop, size: 50.0),
+          Text(
+            'No Expenses Found',
+            style: TextStyle(
+              fontSize: 18.0,
+              color: Colors.red,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (_registerdExpenses.isNotEmpty) {
+      mainContent = ExpensesList(
+        expenses: _registerdExpenses,
+        onRemoveExpense: _removeExpense,
+      );
+    }
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.blue,
@@ -50,7 +110,7 @@ class _ExpensesState extends State<Expenses> {
       body: Column(
         children: [
           Text('The Chart'),
-          Expanded(child: ExpensesList(expenses: _registerdExpenses)),
+          Expanded(child: mainContent),
           //
         ],
       ),
